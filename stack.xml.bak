@@ -1,0 +1,11 @@
+<stack>
+  <description brief="jimmy_robot">jimmy_robot</description>
+  <author>Maintained by Haikal Pribadi</author>
+  <license>BSD</license>  
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/jimmy_robot</url>
+  <depend stack="haikalpribadi-ros-pkg" /> <!-- parallax_eddie_robot, user_tracker, speech_interface -->
+  <depend stack="ros" />
+  <depend stack="ros_comm" /> <!-- std_msgs, roscpp -->
+
+</stack>
