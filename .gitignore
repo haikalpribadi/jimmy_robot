@@ -4,3 +4,4 @@ cmake_install.cmake
 lib/
 msg_gen/
 srv_gen/
+.gitignore
