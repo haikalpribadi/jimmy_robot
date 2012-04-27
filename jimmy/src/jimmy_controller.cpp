@@ -54,19 +54,30 @@ bool JimmyController::navigateToUser(jimmy::NavigateToUser::Request& req, jimmy:
   user_tracker::GetJointCoordinate torso;
   user_tracker::Coordinate camera_target;
   parallax_eddie_robot::Velocity velocity;
+  int counter = 0;
   
-  right_hand.request.joint_frame += "_1";
   while(ros::ok())
   {
-    for(int i=0; i<5; i++)
+    for(int i=1; i<=1; i++)
     {
-      right_hand.request.joint_frame = frame_hand_right + "_" + i;
-      left_hand.request.joint_frame = frame_hand_left + "_" + i;
-      neck.request.joint_frame = frame_neck + "_" + i;
-      torso.request.joint_frame = frame_torso + "_" + i;
+      std::stringstream ss;
+      ss << frame_hand_right << "_" << i;
+      right_hand.request.joint_frame = ss.str();
+      ss.str(std::string());ss.clear();
+      ss << frame_hand_left << "_" << i;
+      left_hand.request.joint_frame = ss.str();
+      ss.str(std::string());ss.clear();
+      ss << frame_neck << "_" << i;
+      neck.request.joint_frame = ss.str();
+      ss.str(std::string());ss.clear();
+      ss << frame_torso << "_" << i;
+      torso.request.joint_frame = ss.str();
       
       if(user_joint_srv_.call(torso))
       {
+        velocity.angular = 0;
+        velocity.linear = 0;
+        velocity_pub_.publish(velocity);
         camera_target.x = torso.response.x;
         camera_target.y = torso.response.y;
         camera_target.z = torso.response.z;
@@ -79,7 +90,7 @@ bool JimmyController::navigateToUser(jimmy::NavigateToUser::Request& req, jimmy:
         if(has_neck)
         {
           ROS_INFO("neck position x: %f, y: %f, z: %f", 
-            neck.response.x, neck.response.y, neck.reponse.z);
+            neck.response.x, neck.response.y, neck.response.z);
         }
         else
         {
@@ -117,14 +128,22 @@ bool JimmyController::navigateToUser(jimmy::NavigateToUser::Request& req, jimmy:
             camera_target.y = torso.response.y;
             camera_target.z = torso.response.z;
             camera_target_pub_.publish(camera_target);
-            velocity.angular = atan2(torso.response.y, torso.response.x);
+            velocity.angular = atan2(torso.response.y, torso.response.x) * 180 / PI;
+            velocity.angular = velocity.angular>180 ? velocity.angular-360 : velocity.angular;
+            velocity.angular = -1 * velocity.angular;
             velocity.linear = 2.0;
             velocity_pub_.publish(velocity);
+            if(!user_joint_srv_.call(torso))
+              break;
+            usleep(100000);
           }
           velocity.angular = 0;
           velocity.linear = 0;
           velocity_pub_.publish(velocity);
-          return true;
+          camera_target.x = 0;
+          camera_target.y = 0;
+          camera_target.z = 0;
+          camera_target_pub_.publish(camera_target);
         }
       }
       else
@@ -134,7 +153,15 @@ bool JimmyController::navigateToUser(jimmy::NavigateToUser::Request& req, jimmy:
         continue;
       }
     }
+    counter++;
+    if(counter<5)
+      continue;
     
+    counter = 0;
+    velocity.angular = 30;
+    velocity.linear = 0;
+    velocity_pub_.publish(velocity);
+    sleep(1000000);
   }
   return true;
 }
@@ -162,8 +189,9 @@ int main(int argc, char** argv)
   ROS_INFO("Jimmy Controller is booting up");
   ros::init(argc, argv, "jimmy_controller");
   JimmyController jimmy;
-  //ros::spin();
-  jimmy.test();
+  
+  ros::spin();
+  
   return (EXIT_SUCCESS);
 }
 

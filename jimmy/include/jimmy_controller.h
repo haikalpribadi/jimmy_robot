@@ -58,6 +58,8 @@
 #define frame_foot_left "/left_foot"
 #define frame_foot_right "/right_foot"
 
+#define PI 3.14159265
+
 class JimmyController{
 public:
     JimmyController();

@@ -4,6 +4,6 @@
 	<node pkg="openni_tracker" type="openni_tracker" name="openni_tracker" />
 	<node pkg="user_tracker" type="joint_position" name="joint_position"/>
 	<node pkg="jimmy" type="jimmy_controller" name="jimmy_controller" output="screen"/>
-	
+	<node pkg="jimmy" type="jimmy_agent" name="jimmy_agent" output="screen"/>
 </launch>
 <!--%EndTag(FULL)%-->

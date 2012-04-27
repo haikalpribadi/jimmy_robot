@@ -32,3 +32,4 @@ rosbuild_gensrv()
 include_directories (include)
 
 rosbuild_add_executable(jimmy_controller src/jimmy_controller.cpp)
+rosbuild_add_executable(jimmy_agent src/jimmy_agent.cpp)
