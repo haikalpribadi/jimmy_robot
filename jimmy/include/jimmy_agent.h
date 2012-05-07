@@ -32,59 +32,20 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _JIMMY_CONTROLLER_H
-#define	_JIMMY_CONTROLLER_H
+#ifndef _JIMMY_AGENT_H
+#define	_JIMMY_AGENT_H
 
 #include <ros/ros.h>
-#include <std_msgs/Float64.h>
-#include <user_tracker/GetJointCoordinate.h>
-#include <user_tracker/GetCameraAngle.h>
-#include <user_tracker/Coordinate.h>
 #include <jimmy/NavigateToUser.h>
-#include <parallax_eddie_robot/Velocity.h>
 
-#define frame_head "/head"
-#define frame_neck "/neck"
-#define frame_torso "/torso"
-#define frame_shoulder_left "/left_shoulder"
-#define frame_shoulder_right "/right_shoulder"
-#define frame_elbow_left "/left_elbow"
-#define frame_elbow_right "/right_elbow"
-#define frame_hand_left "/left_hand"
-#define frame_hand_right "/right_hand"
-#define frame_hip_left "/left_hip"
-#define frame_hip_right "/right_hip"
-#define frame_knee_left "/left_knee"
-#define frame_knee_right "/right_knee"
-#define frame_foot_left "/left_foot"
-#define frame_foot_right "/right_foot"
-
-#define PI 3.14159265
-
-class JimmyController{
+class JimmyAgent{
 public:
-    JimmyController();
+    JimmyAgent();
     void test();
 private:
     ros::NodeHandle node_handle_;
-    ros::ServiceClient user_joint_srv_;
-    ros::ServiceClient camera_angle_srv_;
-    ros::Publisher camera_target_pub_;
-    ros::Publisher set_angle_pub_;
-    ros::ServiceServer navigate_to_user_srv_;
-    ros::Publisher velocity_pub_;
-
-    bool navigateToUser(jimmy::NavigateToUser::Request& req, jimmy::NavigateToUser::Response& res);
-
+    ros::ServiceClient navigate_srv_;
 };
 
-class Coordinate{
-public:
-    Coordinate(){}
-    int x;
-    int y;
-    int z;
-};
-
-#endif	/* _JIMMY_CONTROLLER_H */
+#endif	/* _JIMMY_AGENT_H */
 

@@ -32,59 +32,34 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _JIMMY_CONTROLLER_H
-#define	_JIMMY_CONTROLLER_H
+#include "jimmy_agent.h"
 
-#include <ros/ros.h>
-#include <std_msgs/Float64.h>
-#include <user_tracker/GetJointCoordinate.h>
-#include <user_tracker/GetCameraAngle.h>
-#include <user_tracker/Coordinate.h>
-#include <jimmy/NavigateToUser.h>
-#include <parallax_eddie_robot/Velocity.h>
 
-#define frame_head "/head"
-#define frame_neck "/neck"
-#define frame_torso "/torso"
-#define frame_shoulder_left "/left_shoulder"
-#define frame_shoulder_right "/right_shoulder"
-#define frame_elbow_left "/left_elbow"
-#define frame_elbow_right "/right_elbow"
-#define frame_hand_left "/left_hand"
-#define frame_hand_right "/right_hand"
-#define frame_hip_left "/left_hip"
-#define frame_hip_right "/right_hip"
-#define frame_knee_left "/left_knee"
-#define frame_knee_right "/right_knee"
-#define frame_foot_left "/left_foot"
-#define frame_foot_right "/right_foot"
+JimmyAgent::JimmyAgent()
+{
+  navigate_srv_ = node_handle_.serviceClient<jimmy::NavigateToUser>("navigate_to_user");
+}
 
-#define PI 3.14159265
-
-class JimmyController{
-public:
-    JimmyController();
-    void test();
-private:
-    ros::NodeHandle node_handle_;
-    ros::ServiceClient user_joint_srv_;
-    ros::ServiceClient camera_angle_srv_;
-    ros::Publisher camera_target_pub_;
-    ros::Publisher set_angle_pub_;
-    ros::ServiceServer navigate_to_user_srv_;
-    ros::Publisher velocity_pub_;
-
-    bool navigateToUser(jimmy::NavigateToUser::Request& req, jimmy::NavigateToUser::Response& res);
-
-};
-
-class Coordinate{
-public:
-    Coordinate(){}
-    int x;
-    int y;
-    int z;
-};
-
-#endif	/* _JIMMY_CONTROLLER_H */
+void JimmyAgent::test()
+{
+  ROS_INFO("Entering Jimmy Test 0");
+  jimmy::NavigateToUser navigate;
+  ROS_INFO("Entering Jimmy Test 1");
+  ros::ServiceClient test;
+  ROS_INFO("Entering Jimmy Test 2");
+  test = node_handle_.serviceClient<jimmy::NavigateToUser>("navigate_to_user");
+  ROS_INFO("Entering Jimmy Test 3");
+  test.call(navigate);
+  ROS_INFO("Entering Jimmy Test 4");
+}
+/*
+ * 
+ */
+int main(int argc, char** argv)
+{
+  ros::init(argc, argv, "jimmy_agent");
+  JimmyAgent agent;
+  agent.test();
+  return 0;
+}
 

@@ -1,8 +1,26 @@
 <!--%Tag(FULL)%-->
 <launch>
-
+	<include file="$(find openni_camera)/launch/openni_node.launch"/>
 	<node pkg="openni_tracker" type="openni_tracker" name="openni_tracker" />
+	<node pkg="kinect_aux" type="kinect_aux_node" name="kinect_aux_node" />
+	
+	<param name="serial_port" value="/dev/ttyUSB0" />
+	<param name="scale_angular" value="2.0" />
+	<param name="scale_linear" value="3.0" />
+	<param name="left_motor_power" value="30" />
+	<param name="right_motor_power" value="31" />
+	<param name="left_motor_speed" value="36" />
+	<param name="right_motor_speed" value="36" />
+	<param name="acceleration_rate" value="9" />
+	<param name="rotation_speed" value="36" />
+	
+	<!--
+	<node pkg="parallax_eddie_robot" type="eddie" name="eddie" />-->
+	<node pkg="parallax_eddie_robot" type="eddie_controller" name="eddie_controller" output="screen" />
+	
+	
 	<node pkg="user_tracker" type="joint_position" name="joint_position"/>
+    <node pkg="user_tracker" type="camera_tilt" name="camera_tilt"/>
 	<node pkg="jimmy" type="jimmy_controller" name="jimmy_controller" output="screen"/>
 	<node pkg="jimmy" type="jimmy_agent" name="jimmy_agent" output="screen"/>
 </launch>
