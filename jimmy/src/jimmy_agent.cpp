@@ -42,15 +42,19 @@ JimmyAgent::JimmyAgent()
 
 void JimmyAgent::test()
 {
-  ROS_INFO("Entering Jimmy Test 0");
-  jimmy::NavigateToUser navigate;
-  ROS_INFO("Entering Jimmy Test 1");
-  ros::ServiceClient test;
-  ROS_INFO("Entering Jimmy Test 2");
-  test = node_handle_.serviceClient<jimmy::NavigateToUser>("navigate_to_user");
-  ROS_INFO("Entering Jimmy Test 3");
-  test.call(navigate);
-  ROS_INFO("Entering Jimmy Test 4");
+  for(int i=0; i<10; i++){
+    ROS_INFO("Entering Jimmy Test 0");
+    jimmy::NavigateToUser navigate;
+    ROS_INFO("Entering Jimmy Test 1");
+    ros::ServiceClient test;
+    ROS_INFO("Entering Jimmy Test 2");
+    test = node_handle_.serviceClient<jimmy::NavigateToUser>("navigate_to_user");
+    ROS_INFO("Entering Jimmy Test 3");
+    test.call(navigate);
+    ROS_INFO("Entering Jimmy Test 4");
+    usleep(1000000);
+  }
+  
 }
 /*
  * 
