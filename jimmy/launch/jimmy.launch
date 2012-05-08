@@ -14,8 +14,8 @@
 	<param name="acceleration_rate" value="9" />
 	<param name="rotation_speed" value="36" />
 	
-	<!--
-	<node pkg="parallax_eddie_robot" type="eddie" name="eddie" />-->
+	<!-- -->
+	<node pkg="parallax_eddie_robot" type="eddie" name="eddie" />
 	<node pkg="parallax_eddie_robot" type="eddie_controller" name="eddie_controller" output="screen" />
 	
 	
