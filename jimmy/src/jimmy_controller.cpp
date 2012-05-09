@@ -65,7 +65,7 @@ bool JimmyController::navigateToUser(jimmy::NavigateToUser::Request& req, jimmy:
   
   while(ros::ok())
   {
-    for(int i=1; i<=5; i++)
+    for(int i=1; i<=10; i++)
     {
       set_angle_pub_.publish(center);
       std::stringstream ss;
@@ -187,7 +187,7 @@ bool JimmyController::navigateToUser(jimmy::NavigateToUser::Request& req, jimmy:
     counter = 0;
     velocity.angular = 45;
     velocity.linear = 0;
-    velocity_pub_.publish(velocity);
+    //velocity_pub_.publish(velocity);
     //usleep(10);
   }
   return true;
