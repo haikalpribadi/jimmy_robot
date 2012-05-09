@@ -35,7 +35,8 @@
 #include "jimmy_controller.h"
 
 
-JimmyController::JimmyController()
+JimmyController::JimmyController():
+l_scale_(1.0), a_scale_(1.0)
 {
   user_joint_srv_ = node_handle_.serviceClient<user_tracker::GetJointCoordinate>("get_joint_coordinate");
   camera_angle_srv_ = node_handle_.serviceClient<user_tracker::GetCameraAngle>("get_camera_angle");
@@ -44,6 +45,8 @@ JimmyController::JimmyController()
   navigate_to_user_srv_ = node_handle_.advertiseService("navigate_to_user", &JimmyController::navigateToUser, this);
   velocity_pub_ = node_handle_.advertise<parallax_eddie_robot::Velocity > ("/eddie/command_velocity", 1);
   
+  node_handle_.param("scale_angular", a_scale_, a_scale_);
+  node_handle_.param("scale_linear", l_scale_, l_scale_);
 }
 
 bool JimmyController::navigateToUser(jimmy::NavigateToUser::Request& req, jimmy::NavigateToUser::Response& res)
@@ -132,8 +135,8 @@ bool JimmyController::navigateToUser(jimmy::NavigateToUser::Request& req, jimmy:
           previous = torso;
           while(torso.response.x > 120)
           {
-            ROS_INFO("Tracking user at x: %f, y: %f, z: %f",
-            torso.response.x, torso.response.y, torso.response.z);
+            //ROS_INFO("Tracking user at x: %f, y: %f, z: %f",
+            //torso.response.x, torso.response.y, torso.response.z);
             if(track_count==0){
               camera_target.x = torso.response.x;
               camera_target.y = torso.response.y;
@@ -142,9 +145,9 @@ bool JimmyController::navigateToUser(jimmy::NavigateToUser::Request& req, jimmy:
             }
             velocity.angular = atan2(torso.response.y, torso.response.x) * 180 / PI;
             velocity.angular = velocity.angular>180 ? velocity.angular-360 : velocity.angular;
-            velocity.angular = -1 * velocity.angular;
-            velocity.linear = 2.0;
-            ROS_INFO("Driving at angular: %f", velocity.angular);
+            velocity.angular = -1 * velocity.angular * a_scale_;
+            velocity.linear = 1.0 * l_scale_;
+            //ROS_INFO("Driving at angular: %f", velocity.angular);
             velocity_pub_.publish(velocity);
             if(!user_joint_srv_.call(torso))
               break;
@@ -158,7 +161,7 @@ bool JimmyController::navigateToUser(jimmy::NavigateToUser::Request& req, jimmy:
             previous = torso;
             track_count++;
             if(track_count==5) track_count = 0;
-            //usleep(100);
+            usleep(100);
           }
           velocity.angular = 0;
           velocity.linear = 0;

@@ -75,7 +75,7 @@ private:
     ros::Publisher velocity_pub_;
 
     bool navigateToUser(jimmy::NavigateToUser::Request& req, jimmy::NavigateToUser::Response& res);
-
+    double l_scale_, a_scale_;
 };
 
 class Coordinate{
