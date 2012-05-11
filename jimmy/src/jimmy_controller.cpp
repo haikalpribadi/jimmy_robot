@@ -133,7 +133,7 @@ bool JimmyController::navigateToUser(jimmy::NavigateToUser::Request& req, jimmy:
           int track_count = 0;
           user_joint_srv_.call(torso);
           previous = torso;
-          while(torso.response.x > 120)
+          while(torso.response.x > 70)
           {
             //ROS_INFO("Tracking user at x: %f, y: %f, z: %f",
             //torso.response.x, torso.response.y, torso.response.z);
@@ -146,7 +146,16 @@ bool JimmyController::navigateToUser(jimmy::NavigateToUser::Request& req, jimmy:
             velocity.angular = atan2(torso.response.y, torso.response.x) * 180 / PI;
             velocity.angular = velocity.angular>180 ? velocity.angular-360 : velocity.angular;
             velocity.angular = -1 * velocity.angular * a_scale_;
-            velocity.linear = 1.0 * l_scale_;
+            if(torso.response.x<130 && torso.response.x>70)
+            {
+              velocity.linear = (((double)torso.response.x-150)/80) * l_scale_;
+              velocity.angular = (-1*velocity.angular*0.5) - (a_scale_*0.5);
+              ROS_INFO("Reversing at angular: %f", velocity.angular);
+            }
+            else if(torso.response.x<200)
+              velocity.linear = ((double)(torso.response.x - 130)/70)*l_scale_;
+            else
+              velocity.linear = 1.0 * l_scale_;
             //ROS_INFO("Driving at angular: %f", velocity.angular);
             velocity_pub_.publish(velocity);
             if(!user_joint_srv_.call(torso))
