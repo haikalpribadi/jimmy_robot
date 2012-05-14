@@ -41,6 +41,7 @@
 #include <user_tracker/GetCameraAngle.h>
 #include <user_tracker/Coordinate.h>
 #include <jimmy/NavigateToUser.h>
+#include <jimmy/FollowUser.h>
 #include <parallax_eddie_robot/Velocity.h>
 
 #define frame_head "/head"
@@ -58,6 +59,8 @@
 #define frame_knee_right "/right_knee"
 #define frame_foot_left "/left_foot"
 #define frame_foot_right "/right_foot"
+#define follow_mode "follow"
+#define navigate_mode "navigate"
 
 #define PI 3.14159265
 
@@ -66,16 +69,26 @@ public:
     JimmyController();
     void test();
 private:
+    double l_scale_, a_scale_;
+    int max_freeze_, total_users_;
+    
     ros::NodeHandle node_handle_;
     ros::ServiceClient user_joint_srv_;
     ros::ServiceClient camera_angle_srv_;
     ros::Publisher camera_target_pub_;
-    ros::Publisher set_angle_pub_;
+    ros::Publisher camera_angle_pub_;
     ros::ServiceServer navigate_to_user_srv_;
+    ros::ServiceServer follow_user_srv_;
     ros::Publisher velocity_pub_;
 
     bool navigateToUser(jimmy::NavigateToUser::Request& req, jimmy::NavigateToUser::Response& res);
-    double l_scale_, a_scale_;
+    bool followUser(jimmy::FollowUser::Request& req, jimmy::FollowUser::Response& res);
+    bool searchUser(user_tracker::GetJointCoordinate &joint);
+    bool driveToUser(user_tracker::GetJointCoordinate joint, std::string mode);
+    parallax_eddie_robot::Velocity setVelocity(user_tracker::GetJointCoordinate joint, std::string mode);
+    void stopNavigating();
+    void targetCameraTilt(user_tracker::GetJointCoordinate joint);
+    
 };
 
 class Coordinate{
