@@ -1,9 +1,17 @@
 <!--%Tag(FULL)%-->
 <launch>
+	<!-- Launch kinect nodes -->
 	<include file="$(find openni_camera)/launch/openni_node.launch"/>
 	<node pkg="openni_tracker" type="openni_tracker" name="openni_tracker" />
 	<node pkg="kinect_aux" type="kinect_aux_node" name="kinect_aux_node" />
 	
+	<!-- pocketsphinx -->
+	<node name="recognizer" pkg="pocketsphinx" type="recognizer.py">
+    	<param name="lm" value="$(find speech_interface)/language/vocabulary.lm"/>
+    	<param name="dict" value="$(find speech_interface)/language/vocabulary.dic"/>
+  	</node>
+	
+	<!-- parallax_eddie_robot -->
 	<param name="serial_port" value="/dev/ttyUSB0" />
 	<param name="scale_angular" value="3.0" />
 	<param name="scale_linear" value="3.0" />
@@ -18,12 +26,19 @@
 	<param name="rotation_speed" value="36" />
 	<param name="acceleration_speed" value="100" />
 	
-	<!-- -->
 	<node pkg="parallax_eddie_robot" type="eddie" name="eddie" />
-	<node pkg="parallax_eddie_robot" type="eddie_controller" name="eddie_controller" output="screen" />
+	<node pkg="parallax_eddie_robot" type="eddie_controller" name="eddie_controller" />
 	
+	<!-- speech_interface -->
+	<param name="command_list" value="$(find speech_interface)/language/command_set"/>
+	<node pkg="speech_interface" type="speech_to_command" name="speech_to_command" output="screen"/>
+	<node pkg="speech_interface" type="text_to_speech_talker" name="text_to_speech_talker" />
+	
+	<!-- user_tracker -->
 	<node pkg="user_tracker" type="joint_position" name="joint_position"/>
     <node pkg="user_tracker" type="camera_tilt" name="camera_tilt"/>
+    
+    <!-- jimmy -->
 	<node pkg="jimmy" type="jimmy_controller" name="jimmy_controller" output="screen"/>
 	<node pkg="jimmy" type="jimmy_agent" name="jimmy_agent" output="screen"/>
 </launch>

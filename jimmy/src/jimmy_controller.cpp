@@ -87,7 +87,6 @@ bool JimmyController::searchUser(user_tracker::GetJointCoordinate &torso)
   center.data = 0;
   int counter = 0;
 
-  usleep(1000);
   while (ros::ok())
   {
     for (int i = 1; i <= total_users_; i++)
@@ -166,7 +165,7 @@ bool JimmyController::driveToUser(user_tracker::GetJointCoordinate joint, std::s
     min_distance = 110;
   while (joint.response.x > min_distance)
   {
-    //if (track_count == 0) targetCameraTilt(joint);
+    if (track_count == 0) targetCameraTilt(joint);
     velocity = setVelocity(joint, mode);
     velocity_pub_.publish(velocity);
 
