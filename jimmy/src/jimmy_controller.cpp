@@ -142,13 +142,13 @@ bool JimmyController::searchUser(user_tracker::GetJointCoordinate &torso)
       }
     }
     counter++;
-    if (counter < 5)
+    if (counter < 3)
       continue;
     counter = 0;
-    velocity.angular = 45;
+    velocity.angular = 20;
     velocity.linear = 0;
-    //velocity_pub_.publish(velocity);
-    //usleep(10);
+    velocity_pub_.publish(velocity);
+    usleep(10);
   }
   return false;
 }
