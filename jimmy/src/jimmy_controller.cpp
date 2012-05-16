@@ -45,8 +45,8 @@ JimmyController::JimmyController() :
   follow_user_srv_ = node_handle_.advertiseService("follow_user", &JimmyController::followUser, this);
   velocity_pub_ = node_handle_.advertise<parallax_eddie_robot::Velocity > ("/eddie/command_velocity", 1);
 
-  node_handle_.param("scale_angular", a_scale_, a_scale_);
-  node_handle_.param("scale_linear", l_scale_, l_scale_);
+  node_handle_.param("angular_scale", a_scale_, a_scale_);
+  node_handle_.param("linear_scale", l_scale_, l_scale_);
   node_handle_.param("max_freeze", max_freeze_, max_freeze_);
   node_handle_.param("total_users", total_users_, total_users_);
 }
