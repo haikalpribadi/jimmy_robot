@@ -1,6 +1,8 @@
 A - Main 
 ABORT - Main 
 ALE - Main 
+pronounce: verbosity is 1
+ALHASHMI - By LtoS rules
 AN - Main 
 AND - Main 
 ANOTHER - Main 
@@ -13,26 +15,28 @@ BRANDY - Main
 CAN - Main 
 CANCEL - Main 
 CHANGE - Main 
+CHRIS - Main 
+CHRISTOPHER - Main 
 CIDER - Main 
 COKE - Main 
 COME - Main 
 CREAM - Main 
 DO - Main 
 DOING - Main 
-pronounce: verbosity is 1
 DONT - By LtoS rules
 DOWN - Main 
 DRINK - Main 
 EGERTON - Main 
+ENG - Main 
 FASTER - Main 
 FIRST - Main 
+FOLLOW - Main 
 FORWARD - Main 
 FREEZE - Main 
 FULL - Main 
 GET - Main 
 GIN - Main 
 GO - Main 
-HAFF - Main 
 HAIKAL - By LtoS rules
 HALF - Main 
 HALT - Main 
@@ -45,18 +49,21 @@ I - Main
 IRISH - Main 
 IS - Main 
 JIMMY - Main 
-JIMY - Morpheme: JIM Y 
-JIN - Main 
 JOSH - Main 
 JOSHUA - Main 
 JUICE - Main 
+KAR - By LtoS rules
+KEONG - By LtoS rules
 KILL - Main 
 LARGER - Main 
 LAST - Main 
 LEFT - Main 
 LEMONADE - Main 
 LIKE - Main 
+LOKE - By LtoS rules
+LUA - Main 
 ME - Main 
+MESSOM - By LtoS rules
 MOVE - Main 
 MY - Main 
 NAME - Main 
@@ -78,13 +85,17 @@ ROBOT - Main
 ROSE - Main 
 ROTATE - Main 
 RUM - Main 
+SAADAT - By LtoS rules
 SAFFARI - By LtoS rules
+SENG - Main 
 SHUT - Main 
 SIMON - Main 
+SLANT - Main 
 SLOW - Main 
 SLOWER - Main 
 SOROUSH - By LtoS rules
 SPEED - Main 
+STEER - Main 
 STOP - Main 
 STRAIGHT - Main 
 SURPRISE - Main 

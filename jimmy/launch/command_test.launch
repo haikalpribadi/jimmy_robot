@@ -1,0 +1,20 @@
+<!--%Tag(FULL)%-->
+<launch>
+	<!-- pocketsphinx -->
+	<node name="recognizer" pkg="pocketsphinx" type="recognizer.py">
+    	<param name="lm" value="$(find jimmy)/language/vocabulary.lm"/>
+    	<param name="dict" value="$(find jimmy)/language/vocabulary.dic"/>
+  	</node>
+	
+	
+	
+	<!-- speech_interface -->
+	<param name="command_list" value="$(find jimmy)/language/command_set"/>
+	<node pkg="speech_interface" type="speech_to_command" name="speech_to_command"/>
+	<node pkg="speech_interface" type="text_to_speech_talker" name="text_to_speech_talker" />
+	
+    <!-- jimmy
+	<node pkg="jimmy" type="jimmy_controller" name="jimmy_controller" output="screen"/>-->
+	<node pkg="jimmy" type="jimmy_agent" name="jimmy_agent" output="screen"/>
+</launch>
+<!--%EndTag(FULL)%-->

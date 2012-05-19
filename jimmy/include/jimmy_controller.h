@@ -36,13 +36,15 @@
 #define	_JIMMY_CONTROLLER_H
 
 #include <ros/ros.h>
+#include <semaphore.h>
 #include <std_msgs/Float64.h>
+#include <jimmy/NavigateToUser.h>
+#include <jimmy/StopController.h>
+#include <jimmy/Speak.h>
+#include <parallax_eddie_robot/Velocity.h>
 #include <user_tracker/GetJointCoordinate.h>
 #include <user_tracker/GetCameraAngle.h>
 #include <user_tracker/Coordinate.h>
-#include <jimmy/NavigateToUser.h>
-#include <jimmy/FollowUser.h>
-#include <parallax_eddie_robot/Velocity.h>
 
 #define frame_head "/head"
 #define frame_neck "/neck"
@@ -67,27 +69,33 @@
 class JimmyController{
 public:
     JimmyController();
-    void test();
+    void execute();
 private:
-    double l_scale_, a_scale_;
-    int max_freeze_, total_users_;
-    
     ros::NodeHandle node_handle_;
+    ros::ServiceServer navigate_to_user_srv_;
+    ros::ServiceServer stop_controller_srv_;
+    ros::ServiceClient speech_srv_;
     ros::ServiceClient user_joint_srv_;
     ros::ServiceClient camera_angle_srv_;
+    ros::Publisher velocity_pub_;
     ros::Publisher camera_target_pub_;
     ros::Publisher camera_angle_pub_;
-    ros::ServiceServer navigate_to_user_srv_;
-    ros::ServiceServer follow_user_srv_;
-    ros::Publisher velocity_pub_;
 
+    sem_t mutex_interrupt_;
+    double linear_scale_, angular_scale_;
+    int max_freeze_, total_users_, search_repeat_;
+    bool stop_;
+    bool process_;
+    std::string navigate_mode_;
+    
+    bool stopController(jimmy::StopController::Request& req, jimmy::StopController::Response& res);
     bool navigateToUser(jimmy::NavigateToUser::Request& req, jimmy::NavigateToUser::Response& res);
-    bool followUser(jimmy::FollowUser::Request& req, jimmy::FollowUser::Response& res);
+    void navigateToUser(std::string mode);
     bool searchUser(user_tracker::GetJointCoordinate &joint);
     bool driveToUser(user_tracker::GetJointCoordinate joint, std::string mode);
     parallax_eddie_robot::Velocity setVelocity(user_tracker::GetJointCoordinate joint, std::string mode);
-    void stopNavigating();
     void targetCameraTilt(user_tracker::GetJointCoordinate joint);
+    void stopNavigating();
     
 };
 

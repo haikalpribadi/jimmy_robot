@@ -36,15 +36,73 @@
 #define	_JIMMY_AGENT_H
 
 #include <ros/ros.h>
+#include <std_msgs/String.h>
 #include <jimmy/NavigateToUser.h>
+#include <jimmy/StopController.h>
+#include <jimmy/Speak.h>
+#include <parallax_eddie_robot/Velocity.h>
 
-class JimmyAgent{
+#define cmd_jimmy "jimmy"
+#define cmd_user_name "my name"
+#define cmd_jimmy_name "your name"
+#define cmd_how_are_you "how are you"
+#define cmd_come_here "come here"
+#define cmd_follow_me "follow me"
+#define cmd_stop "stop"
+#define cmd_move_forward "move forward"
+#define cmd_move_backward "move backward"
+#define cmd_go_forward "go forward"
+#define cmd_go_backward "go backward"
+#define cmd_faster "faster"
+#define cmd_slower "slow down"
+#define cmd_turn_left "turn left"
+#define cmd_turn_right "turn right"
+#define cmd_slant_left "slant left"
+#define cmd_slant_right "slant right"
+#define cmd_rotate_left "rotate left"
+#define cmd_rotate_right "rotate right"
+#define cmd_steer_left "steer left"
+#define cmd_steer_right "steer right"
+#define follow_mode "follow"
+#define navigate_mode "navigate"
+#define forward 1
+#define backward -1
+#define slower -1
+#define faster 1
+
+class JimmyAgent {
 public:
     JimmyAgent();
-    void test();
 private:
     ros::NodeHandle node_handle_;
+    ros::ServiceServer speak_srv_;
     ros::ServiceClient navigate_srv_;
+    ros::ServiceClient stop_controller_srv_;
+    ros::Subscriber command_sub_;
+    ros::Publisher speech_pub_;
+    ros::Publisher velocity_pub_;
+    
+    bool auto_run_;
+    std::string user_name_, jimmy_name_;
+    double linear_scale_, angular_scale_, linear_;
+    int direction_;
+    bool driving_;
+
+    void commandCallback(const std_msgs::String::ConstPtr& message);
+    bool speak(jimmy::Speak::Request& req, jimmy::Speak::Response& res);
+    bool stringReplace(std::string& str, const std::string& from, const std::string& to);
+    void sayName();
+    void sayFeeling();
+    void recordUserName(std::string name);
+    void navigateToUser();
+    void followUser();
+    void stop();
+    void changeSpeed(int direction);
+    void drive(int direction);
+    void turn(int degree);
+    void steer(int degree);
+    void commandUnrecognized();
+
 };
 
 #endif	/* _JIMMY_AGENT_H */

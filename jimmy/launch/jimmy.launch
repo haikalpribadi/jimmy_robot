@@ -7,14 +7,12 @@
 	
 	<!-- pocketsphinx -->
 	<node name="recognizer" pkg="pocketsphinx" type="recognizer.py">
-    	<param name="lm" value="$(find speech_interface)/language/vocabulary.lm"/>
-    	<param name="dict" value="$(find speech_interface)/language/vocabulary.dic"/>
+    	<param name="lm" value="$(find jimmy)/language/vocabulary.lm"/>
+    	<param name="dict" value="$(find jimmy)/language/vocabulary.dic"/>
   	</node>
 	
 	<!-- parallax_eddie_robot -->
 	<param name="serial_port" value="/dev/ttyUSB0" />
-	<param name="angular_scale" value="3.0" />
-	<param name="linear_scale" value="3.0" />
 	<param name="left_power" value="32" />
 	<param name="right_power" value="32" />
 	<param name="rotation_power" value="36" />
@@ -30,7 +28,7 @@
 	<node pkg="parallax_eddie_robot" type="eddie_controller" name="eddie_controller" />
 	
 	<!-- speech_interface -->
-	<param name="command_list" value="$(find speech_interface)/language/command_set"/>
+	<param name="command_list" value="$(find jimmy)/language/command_set"/>
 	<node pkg="speech_interface" type="speech_to_command" name="speech_to_command" output="screen"/>
 	<node pkg="speech_interface" type="text_to_speech_talker" name="text_to_speech_talker" />
 	
@@ -39,7 +37,15 @@
     <node pkg="user_tracker" type="camera_tilt" name="camera_tilt"/>
     
     <!-- jimmy -->
+	<param name="angular_scale" value="3.0" />
+	<param name="linear_scale" value="3.0" />
+    <param name="max_freeze" value="10" />
+    <param name="total_users" value="3" />
+    <param name="search_repeate" value="3" />
 	<node pkg="jimmy" type="jimmy_controller" name="jimmy_controller" output="screen"/>
 	<node pkg="jimmy" type="jimmy_agent" name="jimmy_agent" output="screen"/>
+	
+	<!-- rviz -->
+	<node pkg="rviz" type="rviz" name="rviz" />
 </launch>
 <!--%EndTag(FULL)%-->

@@ -1,7 +1,5 @@
 <s> JIMMY </s>
-<s> JIMY </s>
 <s> JIMMY ROBOT </s>
-<s> JIMY ROBOT </s>
 <s> HAIKAL </s>
 <s> HAIKAL PRIBADI </s>
 <s> SIMON </s>
@@ -18,6 +16,13 @@
 <s> MY NAME IS SIMON EGERTON </s>
 <s> MY NAME IS SOROUSH </s>
 <s> MY NAME IS SOROUSH SAFFARI </s>
+<s> MY NAME IS JOSH </s>
+<s> MY NAME IS JOSHUA NEWN </s>
+<s> MY NAME IS LOKE KAR SENG </s>
+<s> MY NAME IS CHRIS MESSOM </s>
+<s> MY NAME IS CHRISTOPHER MESSOM </s>
+<s> MY NAME IS ENG KEONG LUA </s>
+<s> MY NAME IS SAADAT ALHASHMI </s>
 <s> HELLO </s>
 <s> THE </s>
 <s> YES </s>
@@ -54,7 +59,6 @@
 <s> BRANDY </s>
 <s> COKE </s>
 <s> GIN AND TONIC </s>
-<s> JIN AND TONIC </s>
 <s> IRISH CREAM </s>
 <s> LARGER </s>
 <s> LEMONADE </s>
@@ -72,7 +76,6 @@
 <s> CAN YOU GET ME A BRANDY </s>
 <s> CAN YOU GET ME A COKE </s>
 <s> CAN YOU GET ME A GIN AND TONIC </s>
-<s> CAN YOU GET ME A JIN AND TONIC </s>
 <s> CAN YOU GET ME AN IRISH CREAM </s>
 <s> CAN YOU GET ME A LARGER </s>
 <s> CAN YOU GET ME A LEMONADE </s>
@@ -90,7 +93,6 @@
 <s> CAN YOU CHANGE MY DRINK TO BRANDY </s>
 <s> CAN YOU CHANGE MY DRINK TO COKE </s>
 <s> CAN YOU CHANGE MY DRINK TO GIN AND TONIC </s>
-<s> CAN YOU CHANGE MY DRINK TO JIN AND TONIC </s>
 <s> CAN YOU CHANGE MY DRINK TO IRISH CREAM </s>
 <s> CAN YOU CHANGE MY DRINK TO LARGER </s>
 <s> CAN YOU CHANGE MY DRINK TO LEMONADE </s>
@@ -105,6 +107,7 @@
 <s> ANY DRINK </s>
 <s> SURPRISE ME </s>
 <s> COME HERE </s>
+<s> FOLLOW ME </s>
 <s> MOVE FORWARD </s>
 <s> MOVE BACKWARD </s>
 <s> MOVE BACK </s>
@@ -122,15 +125,20 @@
 <s> COME RIGHT </s>
 <s> TURN LEFT </s>
 <s> TURN RIGHT </s>
+<s> SLANT LEFT </s>
+<s> SLANT RIGHT </s>
 <s> ROTATE LEFT </s>
 <s> ROTATE RIGHT </s>
+<s> SLANT LEFT </s>
+<s> SLANT RIGHT </s>
+<s> STEER LEFT </s>
+<s> STEER RIGHT </s>
 <s> FASTER </s>
 <s> SPEED UP </s>
 <s> SLOWER </s>
 <s> SLOW DOWN </s>
 <s> QUARTER SPEED </s>
 <s> HALF SPEED </s>
-<s> HAFF SPEED </s>
 <s> FULL SPEED </s>
 <s> STOP </s>
 <s> STOP NOW </s>
