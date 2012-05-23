@@ -57,9 +57,15 @@ void JimmyAgent::commandCallback(const std_msgs::String::ConstPtr& message)
 {
   std::string command = message->data;
   
-  if(command==cmd_jimmy || command==cmd_come_here)
+  if(command==cmd_jimmy)
+    sayYes();
+  else if(command==cmd_come_here)
     navigateToUser();
-  else if(command==cmd_follow_me)
+  else if(command==cmd_hello)
+    sayHello();
+  else if(command==cmd_help)
+    offerHelp();
+  else if(command==cmd_follow_me || command==cmd_come_with_me)
     followUser();
   else if(command==cmd_jimmy_name)
     sayName();
@@ -67,7 +73,8 @@ void JimmyAgent::commandCallback(const std_msgs::String::ConstPtr& message)
     sayFeeling();
   else if(command.substr(0, 7)==cmd_user_name && command.length()>8)
     recordUserName(command.substr(8));
-  else if(command==cmd_stop)
+  else if(command==cmd_stop || command==cmd_halt || 
+          command==cmd_kill || command==cmd_abort)
     stop();
   else if(command==cmd_move_forward || command==cmd_go_forward)
     drive(forward);
@@ -115,6 +122,13 @@ bool JimmyAgent::stringReplace(std::string& str, const std::string& from, const 
     return true;
 }
 
+void JimmyAgent::sayYes()
+{
+  std_msgs::String speech;
+  
+  speech.data = "Yes, " + user_name_;
+  speech_pub_.publish(speech);
+}
 
 void JimmyAgent::sayName()
 {
@@ -124,6 +138,21 @@ void JimmyAgent::sayName()
   speech_pub_.publish(speech);
 }
 
+void JimmyAgent::sayHello()
+{
+  std_msgs::String speech;
+  
+  speech.data = "Hi, " + user_name_;
+  speech_pub_.publish(speech);
+}
+
+void JimmyAgent::offerHelp()
+{
+  std_msgs::String speech;
+  
+  speech.data = "What can I help you with, " + user_name_;
+  speech_pub_.publish(speech);
+}
 void JimmyAgent::sayFeeling()
 {
   std_msgs::String speech;
@@ -137,7 +166,7 @@ void JimmyAgent::recordUserName(std::string name)
   std_msgs::String speech;
   
   user_name_ = name;
-  speech.data = "Hello, " + user_name_;
+  speech.data = "Hello, " + user_name_ + ". How are you?";
   speech_pub_.publish(speech);
 }
 

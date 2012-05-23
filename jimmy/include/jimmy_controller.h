@@ -42,6 +42,7 @@
 #include <jimmy/StopController.h>
 #include <jimmy/Speak.h>
 #include <parallax_eddie_robot/Velocity.h>
+#include <parallax_eddie_robot/GetStatus.h>
 #include <user_tracker/GetJointCoordinate.h>
 #include <user_tracker/GetCameraAngle.h>
 #include <user_tracker/Coordinate.h>
@@ -74,6 +75,7 @@ private:
     ros::NodeHandle node_handle_;
     ros::ServiceServer navigate_to_user_srv_;
     ros::ServiceServer stop_controller_srv_;
+    ros::ServiceClient emergency_status_srv_;
     ros::ServiceClient speech_srv_;
     ros::ServiceClient user_joint_srv_;
     ros::ServiceClient camera_angle_srv_;

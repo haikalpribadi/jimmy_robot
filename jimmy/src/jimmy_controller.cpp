@@ -40,19 +40,20 @@ JimmyController::JimmyController() :
 {
   navigate_to_user_srv_ = node_handle_.advertiseService("navigate_to_user", &JimmyController::navigateToUser, this);
   stop_controller_srv_ = node_handle_.advertiseService("stop_controller", &JimmyController::stopController, this);
-  speech_srv_ = node_handle_.serviceClient<jimmy::Speak>("jimmy_speak");
+  emergency_status_srv_ = node_handle_.serviceClient<parallax_eddie_robot::GetStatus > ("emergency_status");
+  speech_srv_ = node_handle_.serviceClient<jimmy::Speak > ("jimmy_speak");
   user_joint_srv_ = node_handle_.serviceClient<user_tracker::GetJointCoordinate > ("get_joint_coordinate");
   camera_angle_srv_ = node_handle_.serviceClient<user_tracker::GetCameraAngle > ("get_camera_angle");
   velocity_pub_ = node_handle_.advertise<parallax_eddie_robot::Velocity > ("/eddie/command_velocity", 1);
   camera_target_pub_ = node_handle_.advertise<user_tracker::Coordinate > ("camera_target", 1);
   camera_angle_pub_ = node_handle_.advertise<std_msgs::Float64 > ("/tilt_angle", 1);
-  
+
   node_handle_.param("angular_scale", angular_scale_, angular_scale_);
   node_handle_.param("linear_scale", linear_scale_, linear_scale_);
   node_handle_.param("max_freeze", max_freeze_, max_freeze_);
   node_handle_.param("total_users", total_users_, total_users_);
   node_handle_.param("search_repeat", search_repeat_, search_repeat_);
-  
+
   sem_init(&mutex_interrupt_, 0, 1);
   sem_wait(&mutex_interrupt_);
   stop_ = false;
@@ -82,16 +83,16 @@ void JimmyController::navigateToUser(std::string mode)
 {
   user_tracker::GetJointCoordinate torso;
   bool complete = false, found = false;
-  while(ros::ok() && !complete && !stop_)
+  while (ros::ok() && !complete && !stop_)
   {
     found = searchUser(torso);
-    if(found && !stop_)
+    if (found && !stop_)
       complete = driveToUser(torso, mode);
   }
   sem_wait(&mutex_interrupt_);
   stop_ = false;
   sem_post(&mutex_interrupt_);
-  if(complete)
+  if (complete)
   {
     jimmy::Speak speech;
     speech.request.speech = "What can I help you with, $name ?";
@@ -112,9 +113,9 @@ bool JimmyController::searchUser(user_tracker::GetJointCoordinate &torso)
 
   while (ros::ok() && !stop)
   {
-    for (int i = 1; i<=total_users_ && !stop; i++)
+    for (int i = 1; i <= total_users_ && !stop; i++)
     {
-      camera_angle_pub_.publish(center);
+      //camera_angle_pub_.publish(center);
       std::stringstream ss;
       ss << frame_hand_right << "_" << i;
       right_hand.request.joint_frame = ss.str();
@@ -160,13 +161,16 @@ bool JimmyController::searchUser(user_tracker::GetJointCoordinate &torso)
       else
       {
         ROS_ERROR("Joint position not detected for user %d.", i);
-        continue;
       }
       ros::spinOnce();
       usleep(10);
       sem_wait(&mutex_interrupt_);
       stop = stop_;
       sem_post(&mutex_interrupt_);
+      parallax_eddie_robot::GetStatus status;
+      emergency_status_srv_.call(status);
+      if (!status.response.okay)
+        stop = true;
     }
     counter++;
     if (counter < search_repeat_)
@@ -188,13 +192,13 @@ bool JimmyController::driveToUser(user_tracker::GetJointCoordinate joint, std::s
   user_joint_srv_.call(joint);
   previous = joint;
   bool stop = stop_;
-  if(mode==follow_mode)
+  if (mode == follow_mode)
     min_distance = 70;
-  else 
+  else
     min_distance = 140;
-  while (joint.response.x>min_distance && !stop)
+  while (joint.response.x > min_distance && !stop)
   {
-    if (track_count == 0) targetCameraTilt(joint);
+    //if (track_count == 0) targetCameraTilt(joint);
     velocity = setVelocity(joint, mode);
     velocity_pub_.publish(velocity);
 
@@ -223,11 +227,15 @@ bool JimmyController::driveToUser(user_tracker::GetJointCoordinate joint, std::s
     sem_wait(&mutex_interrupt_);
     stop = stop_;
     sem_post(&mutex_interrupt_);
+    parallax_eddie_robot::GetStatus status;
+    emergency_status_srv_.call(status);
+    if (!status.response.okay)
+      stop = true;
   }
   stopNavigating();
-  if(stop)
+  if (stop)
     return false;
-  else if(joint.response.x<=min_distance)
+  else if (joint.response.x <= min_distance)
     return true;
   else
     return false;
@@ -240,14 +248,14 @@ parallax_eddie_robot::Velocity JimmyController::setVelocity(
   velocity.angular = atan2(joint.response.y, joint.response.x) * 180 / PI;
   velocity.angular = velocity.angular > 180 ? velocity.angular - 360 : velocity.angular;
   velocity.angular = -1 * velocity.angular * angular_scale_;
-  if (mode==follow_mode && joint.response.x < 130 && joint.response.x > 70)
+  if (mode == follow_mode && joint.response.x < 130 && joint.response.x > 70)
   {
     velocity.linear = (((double) joint.response.x - 150) / 80) * linear_scale_;
     velocity.angular = (-1 * velocity.angular * 0.5) - (angular_scale_ * 0.5);
   }
   else if (joint.response.x < 200)
   {
-    if(mode==follow_mode)
+    if (mode == follow_mode)
       velocity.linear = ((double) (joint.response.x - 130) / 70) * linear_scale_;
     else
       velocity.linear = ((double) (joint.response.x - 70) / 130) * linear_scale_;
@@ -266,7 +274,7 @@ void JimmyController::stopNavigating()
   velocity_pub_.publish(velocity);
   std_msgs::Float64 center;
   center.data = 0;
-  camera_angle_pub_.publish(center);
+  //camera_angle_pub_.publish(center);
 }
 
 void JimmyController::targetCameraTilt(user_tracker::GetJointCoordinate joint)

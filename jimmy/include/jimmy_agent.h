@@ -42,13 +42,19 @@
 #include <jimmy/Speak.h>
 #include <parallax_eddie_robot/Velocity.h>
 
+#define cmd_hello "hello"
 #define cmd_jimmy "jimmy"
+#define cmd_help "help"
 #define cmd_user_name "my name"
 #define cmd_jimmy_name "your name"
 #define cmd_how_are_you "how are you"
 #define cmd_come_here "come here"
 #define cmd_follow_me "follow me"
+#define cmd_come_with_me "come with me"
 #define cmd_stop "stop"
+#define cmd_halt "halt"
+#define cmd_kill "kill"
+#define cmd_abort "abort"
 #define cmd_move_forward "move forward"
 #define cmd_move_backward "move backward"
 #define cmd_go_forward "go forward"
@@ -91,7 +97,10 @@ private:
     void commandCallback(const std_msgs::String::ConstPtr& message);
     bool speak(jimmy::Speak::Request& req, jimmy::Speak::Response& res);
     bool stringReplace(std::string& str, const std::string& from, const std::string& to);
+    void sayYes();
     void sayName();
+    void sayHello();
+    void offerHelp();
     void sayFeeling();
     void recordUserName(std::string name);
     void navigateToUser();
