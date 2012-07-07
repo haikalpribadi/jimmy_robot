@@ -37,9 +37,9 @@
 
 #include <ros/ros.h>
 #include <semaphore.h>
+#include <std_msgs/Empty.h>
 #include <std_msgs/Float64.h>
-#include <jimmy/NavigateToUser.h>
-#include <jimmy/StopController.h>
+#include <std_msgs/String.h>
 #include <jimmy/Speak.h>
 #include <parallax_eddie_robot/Velocity.h>
 #include <parallax_eddie_robot/GetStatus.h>
@@ -73,15 +73,15 @@ public:
     void execute();
 private:
     ros::NodeHandle node_handle_;
-    ros::ServiceServer navigate_to_user_srv_;
-    ros::ServiceServer stop_controller_srv_;
+    ros::Subscriber navigate_to_user_sub_;
+    ros::Subscriber stop_controller_sub_;
+    ros::Publisher velocity_pub_;
+    ros::Publisher camera_target_pub_;
+    ros::Publisher camera_angle_pub_;
     ros::ServiceClient emergency_status_srv_;
     ros::ServiceClient speech_srv_;
     ros::ServiceClient user_joint_srv_;
     ros::ServiceClient camera_angle_srv_;
-    ros::Publisher velocity_pub_;
-    ros::Publisher camera_target_pub_;
-    ros::Publisher camera_angle_pub_;
 
     sem_t mutex_interrupt_;
     double linear_scale_, angular_scale_;
@@ -90,8 +90,8 @@ private:
     bool process_;
     std::string navigate_mode_;
     
-    bool stopController(jimmy::StopController::Request& req, jimmy::StopController::Response& res);
-    bool navigateToUser(jimmy::NavigateToUser::Request& req, jimmy::NavigateToUser::Response& res);
+    void stopControllerCallback(const std_msgs::Empty::ConstPtr& message);
+    void navigateToUserCallback(const std_msgs::String::ConstPtr& message);
     void navigateToUser(std::string mode);
     bool searchUser(user_tracker::GetJointCoordinate &joint);
     bool driveToUser(user_tracker::GetJointCoordinate joint, std::string mode);

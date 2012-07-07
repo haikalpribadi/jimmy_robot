@@ -36,9 +36,8 @@
 #define	_JIMMY_AGENT_H
 
 #include <ros/ros.h>
+#include <std_msgs/Empty.h>
 #include <std_msgs/String.h>
-#include <jimmy/NavigateToUser.h>
-#include <jimmy/StopController.h>
 #include <jimmy/Speak.h>
 #include <parallax_eddie_robot/Velocity.h>
 
@@ -82,9 +81,9 @@ public:
 private:
     ros::NodeHandle node_handle_;
     ros::ServiceServer speak_srv_;
-    ros::ServiceClient navigate_srv_;
-    ros::ServiceClient stop_controller_srv_;
     ros::Subscriber command_sub_;
+    ros::Publisher navigate_to_user_pub_;
+    ros::Publisher stop_controller_pub_;
     ros::Publisher speech_pub_;
     ros::Publisher velocity_pub_;
     

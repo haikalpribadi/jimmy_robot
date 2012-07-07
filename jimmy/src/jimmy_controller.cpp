@@ -38,8 +38,8 @@
 JimmyController::JimmyController() :
   linear_scale_(1.0), angular_scale_(1.0), max_freeze_(10), total_users_(5), search_repeat_(3)
 {
-  navigate_to_user_srv_ = node_handle_.advertiseService("navigate_to_user", &JimmyController::navigateToUser, this);
-  stop_controller_srv_ = node_handle_.advertiseService("stop_controller", &JimmyController::stopController, this);
+  navigate_to_user_sub_ = node_handle_.subscribe("/jimmy/navigate_to_user", 1, &JimmyController::navigateToUserCallback, this);
+  stop_controller_sub_ = node_handle_.subscribe("/jimmy/stop_controller", 1, &JimmyController::stopControllerCallback, this);
   emergency_status_srv_ = node_handle_.serviceClient<parallax_eddie_robot::GetStatus > ("emergency_status");
   speech_srv_ = node_handle_.serviceClient<jimmy::Speak > ("jimmy_speak");
   user_joint_srv_ = node_handle_.serviceClient<user_tracker::GetJointCoordinate > ("get_joint_coordinate");
@@ -61,22 +61,20 @@ JimmyController::JimmyController() :
   sem_post(&mutex_interrupt_);
 }
 
-bool JimmyController::stopController(jimmy::StopController::Request& req, jimmy::StopController::Response& res)
+void JimmyController::stopControllerCallback(const std_msgs::Empty::ConstPtr& message)
 {
   sem_wait(&mutex_interrupt_);
   stop_ = true;
   sem_post(&mutex_interrupt_);
-  return true;
 }
 
-bool JimmyController::navigateToUser(jimmy::NavigateToUser::Request& req, jimmy::NavigateToUser::Response& res)
+void JimmyController::navigateToUserCallback(const std_msgs::String::ConstPtr& message)
 {
   sem_wait(&mutex_interrupt_);
   process_ = true;
   stop_ = false;
-  navigate_mode_ = req.mode;
+  navigate_mode_ = message->data;
   sem_post(&mutex_interrupt_);
-  return true;
 }
 
 void JimmyController::navigateToUser(std::string mode)

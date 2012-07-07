@@ -40,9 +40,9 @@ JimmyAgent::JimmyAgent():
 {
   user_name_ = "Sir";
   jimmy_name_ = "Jimmy the robot";
+  navigate_to_user_pub_ = node_handle_.advertise<std_msgs::String>("/jimmy/navigate_to_user", 1);
+  stop_controller_pub_ = node_handle_.advertise<std_msgs::Empty>("/jimmy/stop_controller", 1);
   speak_srv_ = node_handle_.advertiseService("jimmy_speak", &JimmyAgent::speak, this);
-  navigate_srv_ = node_handle_.serviceClient<jimmy::NavigateToUser>("navigate_to_user");
-  stop_controller_srv_ = node_handle_.serviceClient<jimmy::StopController>("stop_controller");
   command_sub_ = node_handle_.subscribe("/speech/speech_to_command", 1, &JimmyAgent::commandCallback, this);
   speech_pub_ = node_handle_.advertise<std_msgs::String > ("/speech/text_to_speech_input", 1);
   velocity_pub_ = node_handle_.advertise<parallax_eddie_robot::Velocity > ("/eddie/command_velocity", 1);
@@ -172,36 +172,36 @@ void JimmyAgent::recordUserName(std::string name)
 
 void JimmyAgent::navigateToUser()
 {
-  jimmy::StopController stop;
-  stop_controller_srv_.call(stop);
+  std_msgs::Empty stop;
+  stop_controller_pub_.publish(stop);
   
   std_msgs::String speech;
-  jimmy::NavigateToUser navigate;
-  navigate.request.mode = navigate_mode;
-  
   speech.data = "Yes, " + user_name_;
   speech_pub_.publish(speech);
-  navigate_srv_.call(navigate);
+  
+  std_msgs::String navigate;
+  navigate.data = navigate_mode;
+  navigate_to_user_pub_.publish(navigate);
 }
 
 void JimmyAgent::followUser()
 {
-  jimmy::StopController stop;
-  stop_controller_srv_.call(stop);
+  std_msgs::Empty stop;
+  stop_controller_pub_.publish(stop);
   
   std_msgs::String speech;
-  jimmy::NavigateToUser follow;
-  follow.request.mode = follow_mode;
-  
   speech.data = "Yes, " + user_name_ + ". I'm coming";
   speech_pub_.publish(speech);
-  navigate_srv_.call(follow);
+  
+  std_msgs::String navigate;
+  navigate.data = follow_mode;
+  navigate_to_user_pub_.publish(navigate);
 }
 
 void JimmyAgent::stop()
 {
-  jimmy::StopController stop;
-  stop_controller_srv_.call(stop);
+  std_msgs::Empty stop;
+  stop_controller_pub_.publish(stop);
   
   parallax_eddie_robot::Velocity velocity;
   velocity.angular = 0;
@@ -231,8 +231,8 @@ void JimmyAgent::changeSpeed(int direction)
 
 void JimmyAgent::drive(int direction)
 {
-  jimmy::StopController stop;
-  stop_controller_srv_.call(stop);
+  std_msgs::Empty stop;
+  stop_controller_pub_.publish(stop);
   
   parallax_eddie_robot::Velocity velocity;
   velocity.angular = 0;
@@ -246,8 +246,8 @@ void JimmyAgent::drive(int direction)
 
 void JimmyAgent::turn(int degree)
 {
-  jimmy::StopController stop;
-  stop_controller_srv_.call(stop);
+  std_msgs::Empty stop;
+  stop_controller_pub_.publish(stop);
   
   parallax_eddie_robot::Velocity velocity;
   velocity.angular = degree;
