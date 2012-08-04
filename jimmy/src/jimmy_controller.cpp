@@ -43,6 +43,7 @@ JimmyController::JimmyController() :
   emergency_status_srv_ = node_handle_.serviceClient<parallax_eddie_robot::GetStatus > ("emergency_status");
   speech_srv_ = node_handle_.serviceClient<jimmy::Speak > ("jimmy_speak");
   user_joint_srv_ = node_handle_.serviceClient<user_tracker::GetJointCoordinate > ("get_joint_coordinate");
+  object_tracker_srv_ = node_handle_.serviceClient<object_tracker::GetObjectCoordinate>("get_object_coordinate");
   camera_angle_srv_ = node_handle_.serviceClient<user_tracker::GetCameraAngle > ("get_camera_angle");
   velocity_pub_ = node_handle_.advertise<parallax_eddie_robot::Velocity > ("/eddie/command_velocity", 1);
   camera_target_pub_ = node_handle_.advertise<user_tracker::Coordinate > ("camera_target", 1);
@@ -73,7 +74,17 @@ void JimmyController::navigateToUserCallback(const std_msgs::String::ConstPtr& m
   sem_wait(&mutex_interrupt_);
   process_ = true;
   stop_ = false;
+  destination_ = destination_user;
   navigate_mode_ = message->data;
+  sem_post(&mutex_interrupt_);
+}
+
+void JimmyController::navigateToObjectCallback(const std_msgs::Empty::ConstPtr& message)
+{
+  sem_wait(&mutex_interrupt_);
+  process_ = true;
+  stop_ = false;
+  destination_ = destination_object;
   sem_post(&mutex_interrupt_);
 }
 
@@ -83,7 +94,11 @@ void JimmyController::navigateToUser(std::string mode)
   bool complete = false, found = false;
   while (ros::ok() && !complete && !stop_)
   {
-    found = searchUser(torso);
+    if(mode!=return_mode)
+      found = searchUser(torso);
+    else
+      found = searchUserReturn(torso);
+    
     if (found && !stop_)
       complete = driveToUser(torso, mode);
   }
@@ -98,14 +113,30 @@ void JimmyController::navigateToUser(std::string mode)
   }
 }
 
+void JimmyController::navigateToObject()
+{
+  bool complete = false, found = false;
+  while(ros::ok() && !complete && !stop_)
+  {
+    found = searchObject();
+    if(found && !stop_)
+      complete = driveToObject();
+    sem_wait(&mutex_interrupt_);
+    if(complete)
+    {
+      //notify jimmy has reached object
+    }
+  }
+}
+
 bool JimmyController::searchUser(user_tracker::GetJointCoordinate &torso)
 {
   user_tracker::GetJointCoordinate right_hand;
   user_tracker::GetJointCoordinate left_hand;
   user_tracker::GetJointCoordinate neck;
   parallax_eddie_robot::Velocity velocity;
-  std_msgs::Float64 center;
-  center.data = 0;
+  //std_msgs::Float64 center;
+  //center.data = 0;
   int counter = 0;
   bool stop = stop_;
 
@@ -139,7 +170,7 @@ bool JimmyController::searchUser(user_tracker::GetJointCoordinate &torso)
         bool hand_raised = false;
         if (!has_neck || !has_left || !has_right)
         {
-          ROS_INFO("User %d detected but neck and hands are not detected", i);
+          ROS_INFO("User %d detected but neck and hands are not all detected", i);
           usleep(10);
           i--;
           continue;
@@ -151,10 +182,7 @@ bool JimmyController::searchUser(user_tracker::GetJointCoordinate &torso)
         if (hand_raised)
           return true;
         else
-        {
           ROS_INFO("User %d detected but hand is not raised", i);
-          continue;
-        }
       }
       else
       {
@@ -185,33 +213,142 @@ bool JimmyController::searchUser(user_tracker::GetJointCoordinate &torso)
   return false;
 }
 
-bool JimmyController::driveToUser(user_tracker::GetJointCoordinate joint, std::string mode)
+bool JimmyController::searchUserReturn(user_tracker::GetJointCoordinate& torso)
+{
+  user_tracker::GetJointCoordinate right_hip;
+  user_tracker::GetJointCoordinate left_hip;
+  user_tracker::GetJointCoordinate right_knee;
+  user_tracker::GetJointCoordinate left_knee;
+  parallax_eddie_robot::Velocity velocity;
+  //std_msgs::Float64 center;
+  //center.data = 0;
+  int counter = 0;
+  bool stop = stop_;
+  
+  while(ros::ok() && !stop)
+  {
+    for(int i = 1; i <= total_users_ && !stop; i++)
+    {
+      //camera_angle_pub_.publish(center);
+      std::stringstream ss;
+      ss << frame_hip_right << "_" << i;
+      right_hip.request.joint_frame = ss.str();
+      ss.str(std::string());
+      ss.clear();
+      ss << frame_hip_left << "_" << i;
+      left_hip.request.joint_frame = ss.str();
+      ss.str(std::string());
+      ss.clear();
+      ss << frame_knee_right << "_" << i;
+      right_knee.request.joint_frame = ss.str();
+      ss.str(std::string());
+      ss.clear();
+      ss << frame_knee_left << "_" << i;
+      left_knee.request.joint_frame = ss.str();
+      ss.str(std::string());
+      ss.clear();
+      ss << frame_torso << "_" << i;
+      torso.request.joint_frame = ss.str();
+      
+      if(user_joint_srv_.call(torso))
+      {
+        stopNavigating();
+        bool has_right_hip = user_joint_srv_.call(right_hip);
+        bool has_left_hip = user_joint_srv_.call(left_hip);
+        bool has_right_knee = user_joint_srv_.call(right_knee);
+        bool has_left_knee = user_joint_srv_.call(left_knee);
+        if(!has_right_hip || !has_left_hip || !has_right_knee || !has_left_knee)
+        {
+          ROS_INFO("User %d detected but hips and knees are not all detected", i);
+          usleep(10);
+          i--;
+          continue;
+        }
+        
+        // Check if user is sitting down
+        //
+        float right_leg_slope, left_leg_slope;
+        Coordinate rh, lh, rk, lk;
+        rh.x = right_hip.response.x;
+        rh.y = right_hip.response.y;
+        rh.z = right_hip.response.z;
+        lh.x = left_hip.response.x;
+        lh.y = left_hip.response.y;
+        lh.z = left_hip.response.z;
+        rk.x = right_knee.response.x;
+        rk.y = right_knee.response.y;
+        rk.z = right_knee.response.z;
+        lk.x = left_knee.response.x;
+        lk.y = left_knee.response.y;
+        lk.z = left_knee.response.z;
+        right_leg_slope = (rh.z-rk.z) / sqrt(pow((rh.x-rk.x),2) + pow((rh.y-rk.y),2));
+        left_leg_slope = (lh.z-lk.z) / sqrt(pow((lh.x-lk.x),2) + pow((lh.y-lk.y),2));
+        
+        if(right_leg_slope<0.5 && left_leg_slope<0.5)
+          return true;
+        else
+          ROS_INFO("User %d detected but is not sitting down", i);
+      }
+      else
+      {
+        ROS_ERROR("Joint position not detected for user %d", i);
+      }
+      ros::spinOnce();
+      usleep(10);
+      sem_wait(&mutex_interrupt_);
+      stop = stop_;
+      sem_post(&mutex_interrupt_);
+      parallax_eddie_robot::GetStatus status;
+      emergency_status_srv_.call(status);
+      if(!status.response.okay)
+        stop = true;
+    }
+    counter++;
+    if(counter < search_repeat_)
+      continue;
+    counter = 0;
+    if(!stop)
+    {
+      velocity.angular = 20;
+      velocity.linear = 0;
+      velocity_pub_.publish(velocity);
+      usleep(10);
+    }
+  }
+  return false;
+}
+
+bool JimmyController::driveToUser(user_tracker::GetJointCoordinate torso, std::string mode)
 {
   user_tracker::GetJointCoordinate previous;
   parallax_eddie_robot::Velocity velocity;
   int freeze_count = 0, track_count = 0, min_distance;
-  user_joint_srv_.call(joint);
-  previous = joint;
+  user_joint_srv_.call(torso);
+  previous = torso;
   bool stop = stop_;
   if (mode == follow_mode)
     min_distance = 70;
   else
     min_distance = 140;
-  while (joint.response.x > min_distance && !stop)
+  while (torso.response.x > min_distance && !stop)
   {
     //if (track_count == 0) targetCameraTilt(joint);
-    velocity = setVelocity(joint, mode);
+    Coordinate target;
+    target.x = torso.response.x;
+    target.y = torso.response.y;
+    target.z = torso.response.z;
+    velocity = setVelocity(target, mode);
     velocity_pub_.publish(velocity);
 
-    if (!user_joint_srv_.call(joint))
+    if (!user_joint_srv_.call(torso))
     {
       stopNavigating();
       return false;
     }
 
-    if (joint.response.x == previous.response.x &&
-        joint.response.y == previous.response.y &&
-        joint.response.z == previous.response.z)
+    if (torso.response.x == previous.response.x &&
+        torso.response.y == previous.response.y &&
+        torso.response.z == previous.response.z)
     {
       freeze_count++;
       if (freeze_count > max_freeze_)
@@ -220,7 +357,7 @@ bool JimmyController::driveToUser(user_tracker::GetJointCoordinate joint, std::s
         return false;
       }
     }
-    previous = joint;
+    previous = torso;
     track_count++;
     if (track_count == 15) track_count = 0;
     ros::spinOnce();
@@ -236,30 +373,125 @@ bool JimmyController::driveToUser(user_tracker::GetJointCoordinate joint, std::s
   stopNavigating();
   if (stop)
     return false;
-  else if (joint.response.x <= min_distance)
+  else if (torso.response.x <= min_distance)
+    return true;
+  else
+    return false;
+}
+
+bool JimmyController::searchObject()
+{
+  object_tracker::GetObjectCoordinate object;
+  parallax_eddie_robot::Velocity velocity;
+  int counter = 0;
+  bool stop = stop_;
+  
+  while(ros::ok() && !stop)
+  {
+    if(object_tracker_srv_.call(object))
+      return true;
+    
+    ros::spinOnce();
+    usleep(10);
+    sem_wait(&mutex_interrupt_);
+    stop = stop_;
+    sem_post(&mutex_interrupt_);
+    parallax_eddie_robot::GetStatus status;
+    emergency_status_srv_.call(status);
+    if(!status.response.okay)
+      stop = true;
+    
+    counter++;
+    if(counter < search_repeat_)
+      continue;
+    counter = 0;
+    if(!stop)
+    {
+      velocity.angular = 20;
+      velocity.linear = 0;
+      velocity_pub_.publish(velocity);
+      usleep(10);
+    }
+  }
+  return false;
+}
+
+bool JimmyController::driveToObject()
+{
+  object_tracker::GetObjectCoordinate object, previous;
+  parallax_eddie_robot::Velocity velocity;
+  int freeze_count = 0, track_count = 0, min_distance = 70;
+  object_tracker_srv_.call(object);
+  previous = object;
+  bool stop = stop_;
+  
+  while(object.response.x > min_distance && !stop)
+  {
+    Coordinate target;
+    target.x = object.response.x;
+    target.y = object.response.y;
+    target.z = object.response.z;
+    
+    velocity = setVelocity(target);
+    
+    if(!object_tracker_srv_.call(object))
+    {
+      stopNavigating();
+      return false;
+    }
+    
+    if(object.response.x == previous.response.x &&
+       object.response.y == previous.response.y &&
+       object.response.z == previous.response.z)
+    {
+      freeze_count++;
+      if(freeze_count > max_freeze_)
+      {
+        stopNavigating();
+        return false;
+      }
+    }
+    
+    previous = object;
+    track_count++;
+    if(track_count == 15) track_count = 0;
+    ros::spinOnce();
+    usleep(100);
+    sem_wait(&mutex_interrupt_);
+    stop = stop_;
+    sem_post(&mutex_interrupt_);
+    parallax_eddie_robot::GetStatus status;
+    emergency_status_srv_.call(status);
+    if(!status.response.okay)
+      stop = true;
+  }
+  stopNavigating();
+  if(stop)
+    return false;
+  else if(object.response.x <= min_distance)
     return true;
   else
     return false;
 }
 
 parallax_eddie_robot::Velocity JimmyController::setVelocity(
-  user_tracker::GetJointCoordinate joint, std::string mode)
+  Coordinate target, std::string mode)
 {
   parallax_eddie_robot::Velocity velocity;
-  velocity.angular = atan2(joint.response.y, joint.response.x) * 180 / PI;
+  velocity.angular = atan2(target.y, target.x) * 180 / PI;
   velocity.angular = velocity.angular > 180 ? velocity.angular - 360 : velocity.angular;
   velocity.angular = -1 * velocity.angular * angular_scale_;
-  if (mode == follow_mode && joint.response.x < 130 && joint.response.x > 70)
+  if (mode == follow_mode && target.x < 130 && target.x > 70)
   {
-    velocity.linear = (((double) joint.response.x - 150) / 80) * linear_scale_;
+    velocity.linear = (((double) target.x - 150) / 80) * linear_scale_;
     velocity.angular = (-1 * velocity.angular * 0.5) - (angular_scale_ * 0.5);
   }
-  else if (joint.response.x < 200)
+  else if (target.x < 200)
   {
     if (mode == follow_mode)
-      velocity.linear = ((double) (joint.response.x - 130) / 70) * linear_scale_;
+      velocity.linear = ((double) (target.x - 130) / 70) * linear_scale_;
     else
-      velocity.linear = ((double) (joint.response.x - 70) / 130) * linear_scale_;
+      velocity.linear = ((double) (target.x - 70) / 130) * linear_scale_;
   }
   else
     velocity.linear = 1.0 * linear_scale_;
@@ -300,9 +532,13 @@ void JimmyController::execute()
     {
       sem_wait(&mutex_interrupt_);
       process_ = false;
+      std::string destination = destination_;
       std::string mode = navigate_mode_;
       sem_post(&mutex_interrupt_);
-      navigateToUser(mode);
+      if(destination == destination_user)
+        navigateToUser(mode);
+      else
+        navigateToObject();
     }
 
     ros::spinOnce();

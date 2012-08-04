@@ -1,0 +1,15 @@
+<launch>
+
+  <machine name="master" address="192.168.1.101" ros-root="$(env ROS_ROOT)"
+     ros-package-path="$(env ROS_PACKAGE_PATH)" user="haikalpribadi" default="true" />
+
+  <machine name="table" address="192.168.1.104" ros-root="$(env ROS_ROOT)"
+     ros-package-path="$(env ROS_PACKAGE_PATH)" user="jimmyrobot" />
+
+  <env name="ROS_HOSTNAME" value="master" />
+  <env name="ROS_MASTER_URI" value="http://master:11311" />
+  <node name="listener" pkg="rospy_tutorials" type="listener" output="screen"/>
+
+  
+
+</launch>

@@ -13,6 +13,7 @@
   <depend package="parallax_eddie_robot"/>
   <depend package="speech_interface"/>
   <depend package="user_tracker"/>
+  <depend package="object_tracker"/>
 
 </package>
 

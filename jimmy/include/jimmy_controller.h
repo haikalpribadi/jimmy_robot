@@ -46,6 +46,7 @@
 #include <user_tracker/GetJointCoordinate.h>
 #include <user_tracker/GetCameraAngle.h>
 #include <user_tracker/Coordinate.h>
+#include <object_tracker/GetObjectCoordinate.h>
 
 #define frame_head "/head"
 #define frame_neck "/neck"
@@ -62,10 +63,21 @@
 #define frame_knee_right "/right_knee"
 #define frame_foot_left "/left_foot"
 #define frame_foot_right "/right_foot"
+#define destination_user "user"
+#define destination_object "object"
 #define follow_mode "follow"
 #define navigate_mode "navigate"
+#define return_mode "return"
 
 #define PI 3.14159265
+
+class Coordinate{
+public:
+    Coordinate(){}
+    int x;
+    int y;
+    int z;
+};
 
 class JimmyController{
 public:
@@ -81,6 +93,7 @@ private:
     ros::ServiceClient emergency_status_srv_;
     ros::ServiceClient speech_srv_;
     ros::ServiceClient user_joint_srv_;
+    ros::ServiceClient object_tracker_srv_;
     ros::ServiceClient camera_angle_srv_;
 
     sem_t mutex_interrupt_;
@@ -88,26 +101,25 @@ private:
     int max_freeze_, total_users_, search_repeat_;
     bool stop_;
     bool process_;
+    std::string destination_;
     std::string navigate_mode_;
     
     void stopControllerCallback(const std_msgs::Empty::ConstPtr& message);
     void navigateToUserCallback(const std_msgs::String::ConstPtr& message);
+    void navigateToObjectCallback(const std_msgs::Empty::ConstPtr& message);
     void navigateToUser(std::string mode);
-    bool searchUser(user_tracker::GetJointCoordinate &joint);
-    bool driveToUser(user_tracker::GetJointCoordinate joint, std::string mode);
-    parallax_eddie_robot::Velocity setVelocity(user_tracker::GetJointCoordinate joint, std::string mode);
+    bool searchUser(user_tracker::GetJointCoordinate &torso);
+    bool searchUserReturn(user_tracker::GetJointCoordinate &torso);
+    bool driveToUser(user_tracker::GetJointCoordinate torso, std::string mode);
+    void navigateToObject();
+    bool searchObject();
+    bool driveToObject();
+    parallax_eddie_robot::Velocity setVelocity(Coordinate target, std::string mode=follow_mode);
     void targetCameraTilt(user_tracker::GetJointCoordinate joint);
     void stopNavigating();
     
 };
 
-class Coordinate{
-public:
-    Coordinate(){}
-    int x;
-    int y;
-    int z;
-};
 
 #endif	/* _JIMMY_CONTROLLER_H */
 
