@@ -86,6 +86,7 @@ public:
 private:
     ros::NodeHandle node_handle_;
     ros::Subscriber navigate_to_user_sub_;
+    ros::Subscriber navigate_to_object_sub_;
     ros::Subscriber stop_controller_sub_;
     ros::Publisher velocity_pub_;
     ros::Publisher camera_target_pub_;

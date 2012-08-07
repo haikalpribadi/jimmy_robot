@@ -34,75 +34,188 @@
 
 #include "jimmy_agent.h"
 
-
-JimmyAgent::JimmyAgent():
+JimmyAgent::JimmyAgent() :
   linear_scale_(1.0), angular_scale_(1.0)
 {
   user_name_ = "Sir";
   jimmy_name_ = "Jimmy the robot";
-  navigate_to_user_pub_ = node_handle_.advertise<std_msgs::String>("/jimmy/navigate_to_user", 1);
-  stop_controller_pub_ = node_handle_.advertise<std_msgs::Empty>("/jimmy/stop_controller", 1);
+  navigate_to_user_pub_ = node_handle_.advertise<std_msgs::String > ("/jimmy/navigate_to_user", 1);
+  stop_controller_pub_ = node_handle_.advertise<std_msgs::Empty > ("/jimmy/stop_controller", 1);
   speak_srv_ = node_handle_.advertiseService("jimmy_speak", &JimmyAgent::speak, this);
   command_sub_ = node_handle_.subscribe("/speech/speech_to_command", 1, &JimmyAgent::commandCallback, this);
   speech_pub_ = node_handle_.advertise<std_msgs::String > ("/speech/text_to_speech_input", 1);
   velocity_pub_ = node_handle_.advertise<parallax_eddie_robot::Velocity > ("/eddie/command_velocity", 1);
-  
+
   node_handle_.param("angular_scale", angular_scale_, angular_scale_);
   node_handle_.param("linear_scale", linear_scale_, linear_scale_);
-  
+
   driving_ = false;
+
+  std::string file;
+  if (node_handle_.getParam("drink_list", file))
+  {
+    ROS_INFO("Using drink_list file: %s", file.c_str());
+    parseDrinks(file);
+  }
+  else
+  {
+    ROS_ERROR("Please set the drink_list (file) parameter for jimmy_agent");
+    ros::requestShutdown();
+  }
+
+}
+
+void JimmyAgent::parseDrinks(std::string filename)
+{
+  std::ifstream infile;
+  std::string drink;
+  infile.open(filename.data());
+  while (!infile.eof())
+  {
+    getline(infile, drink);
+    if (drink.size() == 0)
+      continue;
+    drink_list_.push_back(drink);
+  }
+  infile.close();
+}
+
+bool JimmyAgent::verifyDrink(std::string drink)
+{
+  for (uint i = 0; i < drink_list_.size(); i++)
+  {
+    if (drink == drink_list_[i])
+      return true;
+  }
+  return false;
 }
 
 void JimmyAgent::commandCallback(const std_msgs::String::ConstPtr& message)
 {
   std::string command = message->data;
-  
-  if(command==cmd_jimmy)
-    sayYes();
-  else if(command==cmd_come_here)
+
+  if (command == cmd_jimmy)
     navigateToUser();
-  else if(command==cmd_hello)
+  else if (command == cmd_hello)
     sayHello();
-  else if(command==cmd_help)
-    offerHelp();
-  else if(command==cmd_follow_me || command==cmd_come_with_me)
-    followUser();
-  else if(command==cmd_jimmy_name)
+  else if (command == cmd_jimmy_name)
     sayName();
-  else if(command==cmd_how_are_you)
+  else if (command == cmd_how_are_you)
     sayFeeling();
-  else if(command.substr(0, 7)==cmd_user_name && command.length()>8)
+  else if (command.substr(0, 7) == cmd_user_name && command.length() > 8)
     recordUserName(command.substr(8));
-  else if(command==cmd_stop || command==cmd_halt || 
-          command==cmd_kill || command==cmd_abort)
+  else if (command == cmd_stop || command == cmd_halt ||
+           command == cmd_kill || command == cmd_abort)
     stop();
-  else if(command==cmd_move_forward || command==cmd_go_forward)
-    drive(forward);
-  else if(command==cmd_move_backward || command==cmd_go_backward)
-    drive(backward);
-  else if(command==cmd_faster)
-    changeSpeed(faster);
-  else if(command==cmd_slower)
-    changeSpeed(slower);
-  else if(command==cmd_turn_left)
-    turn(-45);
-  else if(command==cmd_turn_right)
-    turn(45);
-  else if(command==cmd_slant_left)
-    turn(-20);
-  else if(command==cmd_slant_right)
-    turn(20);
-  else if(command==cmd_rotate_left)
-    turn(-360);
-  else if(command==cmd_rotate_right)
-    turn(360);
-  else if(command==cmd_steer_left)
-    steer(-45);
-  else if(command==cmd_steer_right)
-    steer(45);
+  else if (command.substr(0, 3) == cmd_get && command.length() > 8)
+    getDrink(command.substr(5));
   else
     commandUnrecognized();
-    
+
+}
+
+void JimmyAgent::navigateToUser()
+{
+  std_msgs::Empty stop;
+  stop_controller_pub_.publish(stop);
+
+  std_msgs::String speech;
+  speech.data = "Yes, " + user_name_;
+  speech_pub_.publish(speech);
+
+  std_msgs::String navigate;
+  navigate.data = navigate_mode;
+  navigate_to_user_pub_.publish(navigate);
+}
+
+void JimmyAgent::getDrink(std::string drink)
+{
+  if (!verifyDrink(drink))
+  {
+    std_msgs::String speech;
+    speech.data = "I'm sorry we don't have " + drink + ", " + user_name_;
+    speech_pub_.publish(speech);
+  }
+  else
+    processOrder(drink);
+}
+
+void JimmyAgent::processOrder(std::string drink)
+{
+  std::stringstream ss;
+  std::string command;
+  int response;
+  
+  ss << stringReplace(user_name_, " ", "_") << " " << 1 << " " << 1 << " " 
+    << stringReplace(drink, " ", "_");
+  command = ss.str();
+  
+  response = decideResponse(command);
+  
+  //======================================
+  // CONTINUE PROCESSING THE ORDER HERE 
+  //======================================
+}
+
+int JimmyAgent::decideResponse(std::string command)
+{
+  return 0;
+}
+
+void JimmyAgent::sayYes()
+{
+  std_msgs::String speech;
+
+  speech.data = "Yes, " + user_name_;
+  speech_pub_.publish(speech);
+}
+
+void JimmyAgent::sayName()
+{
+  std_msgs::String speech;
+
+  speech.data = "My name is " + jimmy_name_;
+  speech_pub_.publish(speech);
+}
+
+void JimmyAgent::sayHello()
+{
+  std_msgs::String speech;
+
+  speech.data = "Hi, " + user_name_;
+  speech_pub_.publish(speech);
+}
+
+void JimmyAgent::sayFeeling()
+{
+  std_msgs::String speech;
+
+  speech.data = "I'm fine thank you, " + user_name_;
+  speech_pub_.publish(speech);
+}
+
+void JimmyAgent::recordUserName(std::string name)
+{
+  std_msgs::String speech;
+
+  user_name_ = name;
+  speech.data = "Hello, " + user_name_ + ". How are you?";
+  speech_pub_.publish(speech);
+}
+
+void JimmyAgent::stop()
+{
+  std_msgs::Empty stop;
+  stop_controller_pub_.publish(stop);
+
+  parallax_eddie_robot::Velocity velocity;
+  velocity.angular = 0;
+  velocity.linear = 0;
+  velocity_pub_.publish(velocity);
+
+  driving_ = false;
+  direction_ = 0;
+  linear_ = 0;
 }
 
 bool JimmyAgent::speak(jimmy::Speak::Request& req, jimmy::Speak::Response& res)
@@ -114,165 +227,22 @@ bool JimmyAgent::speak(jimmy::Speak::Request& req, jimmy::Speak::Response& res)
   return true;
 }
 
-bool JimmyAgent::stringReplace(std::string& str, const std::string& from, const std::string& to) {
-    size_t start_pos = str.find(from);
-    if(start_pos == std::string::npos)
-        return false;
-    str.replace(start_pos, from.length(), to);
-    return true;
-}
-
-void JimmyAgent::sayYes()
+bool JimmyAgent::stringReplace(std::string& str, const std::string& from, const std::string& to)
 {
-  std_msgs::String speech;
-  
-  speech.data = "Yes, " + user_name_;
-  speech_pub_.publish(speech);
-}
-
-void JimmyAgent::sayName()
-{
-  std_msgs::String speech;
-  
-  speech.data = "My name is " + jimmy_name_;
-  speech_pub_.publish(speech);
-}
-
-void JimmyAgent::sayHello()
-{
-  std_msgs::String speech;
-  
-  speech.data = "Hi, " + user_name_;
-  speech_pub_.publish(speech);
-}
-
-void JimmyAgent::offerHelp()
-{
-  std_msgs::String speech;
-  
-  speech.data = "What can I help you with, " + user_name_;
-  speech_pub_.publish(speech);
-}
-void JimmyAgent::sayFeeling()
-{
-  std_msgs::String speech;
-  
-  speech.data = "I'm fine thank you, " + user_name_;
-  speech_pub_.publish(speech);
-}
-
-void JimmyAgent::recordUserName(std::string name)
-{
-  std_msgs::String speech;
-  
-  user_name_ = name;
-  speech.data = "Hello, " + user_name_ + ". How are you?";
-  speech_pub_.publish(speech);
-}
-
-void JimmyAgent::navigateToUser()
-{
-  std_msgs::Empty stop;
-  stop_controller_pub_.publish(stop);
-  
-  std_msgs::String speech;
-  speech.data = "Yes, " + user_name_;
-  speech_pub_.publish(speech);
-  
-  std_msgs::String navigate;
-  navigate.data = navigate_mode;
-  navigate_to_user_pub_.publish(navigate);
-}
-
-void JimmyAgent::followUser()
-{
-  std_msgs::Empty stop;
-  stop_controller_pub_.publish(stop);
-  
-  std_msgs::String speech;
-  speech.data = "Yes, " + user_name_ + ". I'm coming";
-  speech_pub_.publish(speech);
-  
-  std_msgs::String navigate;
-  navigate.data = follow_mode;
-  navigate_to_user_pub_.publish(navigate);
-}
-
-void JimmyAgent::stop()
-{
-  std_msgs::Empty stop;
-  stop_controller_pub_.publish(stop);
-  
-  parallax_eddie_robot::Velocity velocity;
-  velocity.angular = 0;
-  velocity.linear = 0;
-  velocity_pub_.publish(velocity);
-  
-  driving_ = false;
-  direction_ = 0;
-  linear_ = 0;
-}
-
-void JimmyAgent::changeSpeed(int direction)
-{
-  if(driving_)
-  {
-    linear_ += 0.5 * direction;
-    if(linear_<0)
-      linear_ = 0;
-    
-    parallax_eddie_robot::Velocity velocity;
-  
-    velocity.angular = 0;
-    velocity.linear = linear_ * direction_;
-    velocity_pub_.publish(velocity);
-  }
-}
-
-void JimmyAgent::drive(int direction)
-{
-  std_msgs::Empty stop;
-  stop_controller_pub_.publish(stop);
-  
-  parallax_eddie_robot::Velocity velocity;
-  velocity.angular = 0;
-  velocity.linear = linear_scale_ * direction;
-  linear_ = linear_scale_;
-  velocity_pub_.publish(velocity);
-  driving_ = true;
-  direction_ = direction;
-}
-
-
-void JimmyAgent::turn(int degree)
-{
-  std_msgs::Empty stop;
-  stop_controller_pub_.publish(stop);
-  
-  parallax_eddie_robot::Velocity velocity;
-  velocity.angular = degree;
-  velocity.linear = 0;
-  velocity_pub_.publish(velocity);
-  driving_ = false;
-  direction_ = 0;
-  linear_ = 0;
-}
-
-void JimmyAgent::steer(int degree)
-{
-  if(driving_)
-  {
-    parallax_eddie_robot::Velocity velocity;
-    velocity.angular = degree;
-    velocity.linear = linear_ * direction_;
-    velocity_pub_.publish(velocity);
-  }
+  size_t start_pos = str.find(from);
+  if (start_pos == std::string::npos)
+    return false;
+  str.replace(start_pos, from.length(), to);
+  return true;
 }
 
 void JimmyAgent::commandUnrecognized()
 {
-  
+  std_msgs::String speech;
+  speech.data = "I'm sorry I don't understand, " + user_name_;
+  speech_pub_.publish(speech);
 }
+
 /*
  * 
  */

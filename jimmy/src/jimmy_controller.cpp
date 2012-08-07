@@ -39,6 +39,7 @@ JimmyController::JimmyController() :
   linear_scale_(1.0), angular_scale_(1.0), max_freeze_(10), total_users_(5), search_repeat_(3)
 {
   navigate_to_user_sub_ = node_handle_.subscribe("/jimmy/navigate_to_user", 1, &JimmyController::navigateToUserCallback, this);
+  navigate_to_object_sub_ = node_handle_.subscribe("/jimmy/navigate_to_object", 1, &JimmyController::navigateToObjectCallback, this);
   stop_controller_sub_ = node_handle_.subscribe("/jimmy/stop_controller", 1, &JimmyController::stopControllerCallback, this);
   emergency_status_srv_ = node_handle_.serviceClient<parallax_eddie_robot::GetStatus > ("emergency_status");
   speech_srv_ = node_handle_.serviceClient<jimmy::Speak > ("jimmy_speak");
