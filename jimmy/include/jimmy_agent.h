@@ -43,6 +43,8 @@
 #include <vector>
 #include <sstream>
 #include <fstream>
+#include "ClientSocket.h"
+#include "SocketException.h"
 
 #define cmd_hello "hello"
 #define cmd_jimmy "jimmy"
@@ -60,10 +62,7 @@
 
 #define follow_mode "follow"
 #define navigate_mode "navigate"
-#define forward 1
-#define backward -1
-#define slower -1
-#define faster 1
+#define return_mode "return"
 
 class JimmyAgent {
 public:
@@ -72,35 +71,48 @@ private:
     ros::NodeHandle node_handle_;
     ros::ServiceServer speak_srv_;
     ros::Subscriber command_sub_;
+    ros::Subscriber accept_drink_sub_;
     ros::Publisher navigate_to_user_pub_;
+    ros::Publisher navigate_to_object_pub_;
     ros::Publisher stop_controller_pub_;
     ros::Publisher speech_pub_;
     ros::Publisher velocity_pub_;
     
-    bool auto_run_;
     std::string user_name_, jimmy_name_;
-    double linear_scale_, angular_scale_, linear_;
-    int direction_;
-    bool driving_;
-    
+    std::string jimmy_host_;
+    int jimmy_port_;
+    ClientSocket socket_;
+    std::vector<std::string> response_list_;
     std::vector<std::string> drink_list_;
-
-    void parseDrinks(std::string filename);
-    bool verifyDrink(std::string drink);
+    std::string current_drink_;
+    int state_;
+    
     void commandCallback(const std_msgs::String::ConstPtr& message);
-    void navigateToUser();
-    void getDrink(std::string drink);
-    void processOrder(std::string drink);
-    int decideResponse(std::string command);
-    void sayYes();
-    void sayName();
-    void sayHello();
-    void sayFeeling();
-    void recordUserName(std::string name);
     void stop();
+    void recordUserName(std::string name);
+    void speak(std::string text);
     bool speak(jimmy::Speak::Request& req, jimmy::Speak::Response& res);
     bool stringReplace(std::string& str, const std::string& from, const std::string& to);
     void commandUnrecognized();
+
+    void parseResponses(std::string filename);
+    void parseDrinks(std::string filename);
+    bool verifyDrink(std::string drink);
+    void navigateToUser(std::string mode);
+    void navigateToBar();
+    
+    void getDrink(std::string drink);
+    void changeDrink(std::string drink);
+    void incorrectDrink();
+    void rejectDrink();
+    void acceptDrinkCallback(const std_msgs::Empty::ConstPtr& message);
+    void acceptDrink();
+    int respondToCommand(std::string cmd, std::string drink1, std::string drink2="");
+    std::string generateCommand(std::string cmd, std::string drink1, std::string drink2="");
+    void processOrder(std::string drink);
+    
+    
+    
 
 };
 

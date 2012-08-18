@@ -43,6 +43,7 @@
     <param name="total_users" value="3" />
     <param name="search_repeate" value="3" />
     <param name="drink_list" value="$(find jimmy)/language/drink_list"/>
+    <param name="response_list" value="$(find jimmy)/language/response_list"/>
 	<node pkg="jimmy" type="jimmy_controller" name="jimmy_controller" output="screen"/>
 	<node pkg="jimmy" type="jimmy_agent" name="jimmy_agent" output="screen"/>
 	
